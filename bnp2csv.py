@@ -106,11 +106,6 @@ def parse_from_txt(txtfname):
     return(ops, noops)
 
 
-def process_noops(noops):
-    for l in noops:
-        print(l)
-
-
 if __name__ == "__main__":
     if len(sys.argv) >= 2:
         globalops = []
