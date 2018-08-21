@@ -105,3 +105,6 @@ venv.bak/
 
 #vscode
 .vscode
+
+#bnp-pdf-parser
+out/
