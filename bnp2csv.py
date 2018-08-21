@@ -7,7 +7,7 @@ import subprocess
 import logging
 import re
 import csv
-import copy
+import json
 
 # line patterns
 r_op = re.compile(
@@ -16,12 +16,15 @@ r_op_more = re.compile(r'^\s+(?P<more_label>.+?)$')
 
 # label patterns
 r_op_cb = re.compile(
-    r'.*DU\s(?P<label_dd>\d\d)\s*(?P<label_mm>\d\d)\s*(?P<label_yy>\d\d)\s(?P<second_label>.+)', re.M | re.S)
+    r'.*DU\s(?P<label_dd>\d\d)\s*(?P<label_mm>\d\d)\s*(?P<label_yy>\d\d)\s(?P<second_label>[^\n]+)', re.M | re.S)
 r_op_dab = re.compile(
-    r'RETRAIT\sDAB\s(?P<label_dd>\d\d)/(?P<label_mm>\d\d)/(?P<label_yy>\d\d).*?\n(?P<second_label>.*?)\n', re.M | re.S)
+    r'RETRAIT\sDAB\s(?P<label_dd>\d\d)/(?P<label_mm>\d\d)/(?P<label_yy>\d\d)\s+.*\d+\s+(?P<second_label>.*?)\s+\d+.*', re.M | re.S)
 r_op_sepa_virement = re.compile(
-    r'VIR\sSEPA\sRECU\s/DE\s(?P<second_label>.*?)\s/MOTIF\s(?P<sepa_motif>.*?)\s?/REF\s(?P<sepa_ref>.*)$', re.M | re.S)
-r_labels = {'cb': r_op_cb, 'dab': r_op_dab, 'sepavir': r_op_sepa_virement}
+    r'VIR\sSEPA\sRECU\s/DE\s(?P<second_label>.*?)\s?/MOTIF\s?(?P<sepa_motif>.*?)\s?/REF\s?(?P<sepa_ref>.*)$', re.M | re.S)
+r_op_sepa_prlv = re.compile(
+    r'PRLV\sSEPA\s(?P<second_label>.*?)\s*ECH/(?P<sepa_ech>.*?)\s?MDT/(?P<sepa_mdt>.*?)\s?REF/(?P<sepa_ref>.*?)$', re.M | re.S)
+r_labels = {'cb': r_op_cb, 'dab': r_op_dab,
+            'sepavir': r_op_sepa_virement, "sepaprlv": r_op_sepa_prlv}
 
 
 def parseline_main_op(line, current_op):
@@ -55,14 +58,20 @@ def parseop_label(op):
     return(op)
 
 
-def write_csv(csvfname, dictrows):
+def complete_rows(dictrows):
     for dr in dictrows:
-        if "label_dd" in dr:
-            dr['date'] = "%s/%s" % (dr['label_dd'], dr['label_mm'])
+        if "date" in dr:
+            continue
+        elif "label_dd" in dr:
+            # FIXME: Hardcoded year
+            dr['date'] = "%s/%s/18" % (dr['label_dd'], dr['label_mm'])
         elif "op_dd" in dr:
-            dr['date'] = "%s/%s" % (dr['op_dd'], dr['op_mm'])
+            # FIXME: Hardcoded year
+            dr['date'] = "%s/%s/18" % (dr['op_dd'], dr['op_mm'])
         else:
             raise ValueError
+        if "description" in dr:
+            continue
         if "second_label" in dr:
             dr['description'] = dr['second_label']
         elif "label" in dr:
@@ -72,9 +81,12 @@ def write_csv(csvfname, dictrows):
         if "amount" not in dr:
             raise ValueError
 
+
+def write_csv(csvfname, dictrows):
+    complete_rows(dictrows)
     with open(csvfname, 'w', newline='') as f:
         writer = csv.DictWriter(
-            f, ['date', 'description', 'amount', 'flag', 'label', 'type'], restval="", extrasaction="ignore")
+            f, ['date', 'description', 'amount', 'label', 'type'], restval="", extrasaction="ignore")
         writer.writeheader()
         writer.writerows(dictrows)
 
@@ -115,7 +127,10 @@ if __name__ == "__main__":
             ops, noops = parse_from_txt(txtfname)
             globalops += ops
             globalnoops += noops
-        write_csv("out.csv", globalops)
-        with open("excluded.txt", 'w') as f:
+        write_csv("out/out.csv", globalops)
+        with open("out/excluded.txt", 'w') as f:
             for l in globalnoops:
                 f.write(l)
+        datas = {'rows': globalops}
+        with open("out/out.json", "w") as f:
+            json.dump(datas, f, indent=2)
