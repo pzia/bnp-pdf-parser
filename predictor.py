@@ -3,7 +3,6 @@
 
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS as stopwords 
 from sklearn.feature_extraction.text import CountVectorizer 
-from sklearn.metrics import accuracy_score 
 from sklearn.base import TransformerMixin 
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
@@ -47,33 +46,36 @@ def get_pipe():
                     ('classifier', classifier)])
     return pipe
 
-# Load sample data
-train = [('pain paris', 'pos'),          
-         ('courses vacances intermarché', 'pos'),
-         ('presse vacances', 'pos'),
-         ('tabac le chacal', 'neg'),
-         ("repas saint-denis", 'neg'),
-        ]
-train2 = [('restaurant paris', 'pos'),
-         ('amazon bd', 'neg'),
-         ("amazon bricolage", 'pos'),
-         ('leroy merlin bricolage', 'neg'),          
-         ('retrait bnp', 'neg')] 
-test =   [('location vacances', 'pos'),     
-         ('bricorama bricolage paris', 'neg'),
-         ("ventes privées paris", 'neg'),
-        ]
-# Create model and measure accuracy
-pipe = get_pipe()
-pipe.fit([x[0] for x in train+train2], [x[1] for x in train+train2]) 
-pred_data = pipe.predict([x[0] for x in test]) 
-for (sample, pred) in zip(test, pred_data):
-    print(sample, pred)
-print("--Accuracy:", accuracy_score([x[1] for x in test], pred_data))
+if __name__ == "__main__":
+    from sklearn.metrics import accuracy_score 
 
-pipe2 = get_pipe()
-pipe2.fit([x[0] for x in train2], [x[1] for x in train2]) 
-pred_data = pipe2.predict([x[0] for x in test]) 
-for (sample, pred) in zip(test, pred_data):
-    print(sample, pred)
-print("--Accuracy:", accuracy_score([x[1] for x in test], pred_data))
+    # Load sample data
+    train = [('pain paris', 'pos'),          
+            ('courses vacances intermarché', 'pos'),
+            ('presse vacances', 'pos'),
+            ('tabac le chacal', 'neg'),
+            ("repas saint-denis", 'neg'),
+            ]
+    train2 = [('restaurant paris', 'pos'),
+            ('amazon bd', 'neg'),
+            ("amazon bricolage", 'pos'),
+            ('leroy merlin bricolage', 'neg'),          
+            ('retrait bnp', 'neg')] 
+    test =   [('location vacances', 'pos'),     
+            ('bricorama bricolage paris', 'neg'),
+            ("ventes privées paris", 'neg'),
+            ]
+    # Create model and measure accuracy
+    pipe = get_pipe()
+    pipe.fit([x[0] for x in train+train2], [x[1] for x in train+train2]) 
+    pred_data = pipe.predict([x[0] for x in test]) 
+    for (sample, pred) in zip(test, pred_data):
+        print(sample, pred)
+    print("--Accuracy:", accuracy_score([x[1] for x in test], pred_data))
+
+    pipe2 = get_pipe()
+    pipe2.fit([x[0] for x in train2], [x[1] for x in train2]) 
+    pred_data = pipe2.predict([x[0] for x in test]) 
+    for (sample, pred) in zip(test, pred_data):
+        print(sample, pred)
+    print("--Accuracy:", accuracy_score([x[1] for x in test], pred_data))
