@@ -2,7 +2,6 @@
 # -*- coding:utf-8 -*-
 
 import json
-import urllib3
 
 
 def read_json(fname, rootkey=None):
