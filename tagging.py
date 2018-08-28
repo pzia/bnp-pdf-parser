@@ -2,7 +2,6 @@
 # -*- coding:utf-8 -*-
 
 import json
-import urllib3
 import tagout
 
 if __name__ == "__main__":
